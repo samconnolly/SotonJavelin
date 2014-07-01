@@ -1,0 +1,306 @@
+# -*- coding: utf-8 -*-
+"""
+histTools.py
+
+Created on Thu Jun 26 09:45:28 2014
+
+@author: Sam
+
+Tools to save and plot histogram data from Javelin (Wu 2012(?))
+
+"""
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+from javelin.graphic import figure_handler
+from javelin.lcio import readlc_3c
+from javelin.zylc import LightCurve
+from javelin.lcmodel import Rmap_Model
+import numpy as np
+import pylab as plt
+import os
+
+def plot_saved_mod(filename,lag_lims = [None,None], bins=100, lagbinsize=1.0, \
+                figout=None, figext=None, lagplotonly=False, prob_density=False,\
+                    fontsize=22, xlabel=None, ylabel=None):
+        """ Display histograms of the posterior distributions.
+
+        Parameters
+        ----------
+        model: Rmap model, required
+                    The model whose parameters will be plotted
+				
+        lag_lims: numerical list (len 2), optional
+            Limits on lag histogram plotting
+				
+        bins: integer, optional
+            Number of bins (default:100).
+
+        lagbinsize: float, optional
+            bin width for 'lag' (default:100).
+        
+        figout: str, optional
+            Output figure name (default: None, i.e., using sequencial integers).
+
+        figext: str, optional
+            Output figure extension (default: None, i.e., using `show`).
+
+        """
+        
+        try:
+            f = open(filename,'r')
+        except IOError:
+            print "ERROR: No file named {0}".format(filename)
+            return(1)
+          
+        n = 0
+        flatchain = []
+        
+        for line in f:
+            
+            n += 1
+
+            if n == 1:            
+                names = line.split()
+
+            elif n == 2:            
+                fnames = line.split()
+
+            elif n == 3:
+                nlc = int(line.split()[0])
+                
+            elif n == 4:
+                texs = line.split()
+                
+            elif n == 5:
+                tvars = line.split() # not actually used...
+                                
+            else:
+                data = np.array(line.split()).astype(float)
+                flatchain.append(data)
+        
+        f.close()
+              
+        flatchain = np.array(flatchain)
+        
+        model = [nlc,texs,tvars,flatchain]        
+        
+        show_hist_new(model,lag_lims, bins, lagbinsize, \
+        figout, figext,lagplotonly, prob_density,fontsize,xlabel,ylabel)
+
+        return         
+ 
+def show_hist_new(model,lag_lims = [None,None], bins=100, lagbinsize=1.0, \
+        prob_density=False, figout=None, figext=None, lagplotonly=False, \
+        fontsize=18, xlabel=None, ylabel=None):
+        """ Display histograms of the posterior distributions.
+
+        Parameters
+        ----------
+        model: Rmap model, required
+                    The model whose parameters will be plotted
+				
+        lag_lims: numerical list (len 2), optional
+            Limits on lag histogram plotting
+				
+        bins: integer, optional
+            Number of bins (default:100).
+
+        lagbinsize: float, optional
+            bin width for 'lag' (default:100).
+
+        prob_density: bool, optional
+            plot the y-axis as probability density instead of no. models
+                    
+        figout: str, optional
+            Output figure name (default: None, i.e., using sequencial integers).
+
+        figext: str, optional
+            Output figure extension (default: None, i.e., using `show`).
+        
+        lagplotonly: bool, optional
+            Plot only the time lag distribution
+            
+        fontsize: int, optional
+            choose the plot label font size
+            
+        [can also plot histograms via plot_saved_hist, or otherwise, by providing
+        an array containing the flatchain,texs and nlc]
+
+        """
+       
+        if type(model) != Rmap_Model:
+            
+            if type(model) != list:
+                print "ERROR: Rmap_Model or list of data must be provided"
+                return(1)
+                
+            else:
+                flatchain = model[3]
+                nlc = model[0]
+                texs = model[1]                
+
+        else:
+
+            if not hasattr(model, "flatchain"):
+                print("Warning: need to run do_mcmc or load_chain first")
+                return(1)
+
+            flatchain = model.flatchain
+            nlc = model.nlc
+            texs = model.texs
+        
+        ln10 = np.log(10.0)
+        
+        fig  = plt.figure(figsize=(8, 5)) ###
+        plt.rcParams.update({'font.size': fontsize})        
+        
+        if prob_density:
+            norm = True
+        else:
+            norm = False
+
+        if lagplotonly == False:
+            for i in xrange(2) :
+                ax = fig.add_subplot(nlc,3,i+1)
+                ax.hist(flatchain[:,i]/ln10, bins)
+                ax.set_xlabel(texs[i])
+                ax.set_ylabel("N")
+            
+            for k in xrange(nlc-1):
+                for i in xrange(2+k*3, 5+k*3) :
+                    ax = fig.add_subplot(nlc,3,i+1+1) 
+                    if i == 2 : 
+                        # lag plots
+                        lagbins = np.arange(np.min(flatchain[:,i]), 
+                                np.max(flatchain[:,i])+lagbinsize, lagbinsize)
+                        
+                        if  lag_lims != [None,None]:
+                            ax.hist(flatchain[:,i], bins=lagbins,normed=norm)
+                            plt.xlim(lag_lims)
+                        else:
+                            ax.hist(flatchain[:,i], bins=lagbins,normed=norm)
+
+                        if xlabel != None:
+                            ax.set_xlabel(xlabel)
+                        else:
+                            ax.set_xlabel(texs[i])
+                        if ylabel != None:
+                            ax.set_ylabel(ylabel)
+                        else:
+                            ax.set_ylabel("N")
+                    else :
+                        ax.hist(flatchain[:,i], bins)
+                        ax.set_xlabel(texs[i])
+                        ax.set_ylabel("N")
+
+        else:
+            
+            ax = fig.add_subplot(1,1,1)
+            # lag plots
+            lagbins = np.arange(np.min(flatchain[:,2]), 
+                                np.max(flatchain[:,2])+lagbinsize, lagbinsize)
+            if  lag_lims != [None,None]:
+                ax.hist(flatchain[:,2], bins=lagbins,normed=norm)
+                plt.xlim(lag_lims)
+            else:
+                ax.hist(flatchain[:,2], bins=lagbins,normed=norm)
+
+            if xlabel != None:
+                ax.set_xlabel(xlabel)
+            else:
+                ax.set_xlabel("lag_1")
+            if ylabel != None:
+                ax.set_ylabel(ylabel)
+            else:
+                ax.set_ylabel("N")
+
+        # make sure it's ok for MNRAS!
+        plt.rcParams['ps.useafm'] = True
+        plt.rcParams['pdf.use14corefonts'] = True
+        plt.rcParams['text.usetex'] = True
+
+        plt.show()
+        return   
+
+def plot_new(lc, set_pred=False, obs=None, marker="o", ms=4, ls='None', lw=1, figout=None, figext=None) :
+        """ Plot light curves.
+
+        Parameters
+        ----------
+        set_pred: bool, optional
+            True if the current light curve data are simulated or predicted from
+            javelin, rather than real data (default: False).
+
+        obs: bool, optional
+            The observed light curve data to be overplotted on the current light
+            curves, usually used when set_pred is True (default: None).
+
+        marker: str, optional
+            Marker symbol (default: 'o').
+
+        ms : float, optional
+            Marker size (default: 4).
+
+        ls : str, optional
+            Line style (default: 'None').
+
+        lw: float, optional
+            Line width (default: 1).
+
+        figout: str, optional
+            Output figure name (default: None).
+
+        figext: str, optional
+            Output figure extension, ``png``, ``eps``, or ``pdf``. Set to None
+            for drawing without saving to files (default: None)
+
+
+        """
+        print "Test"
+
+        fig  = plt.figure(figsize=(8, 2*lc.nlc))
+        height = 0.85/lc.nlc
+        for i in xrange(lc.nlc) :
+            ax = fig.add_axes([0.10, 0.1+i*height, 0.85, height])
+            if lc.nlc > 1:
+                mfc = cm.jet(i/(lc.nlc-1.))
+            else:
+                 mfc = cm.jet(0)
+            if set_pred :
+                ax.plot(lc.jlist[i], lc.mlist[i]+lc.blist[i],
+                    color=mfc, ls="-", lw=2,
+                    label=lc.names[i])
+
+                ax.fill_between(lc.jlist[i],
+                    y1=lc.mlist[i]+lc.blist[i]+lc.elist[i], 
+                    y2=lc.mlist[i]+lc.blist[i]-lc.elist[i], 
+                    color=mfc, alpha=0.5,
+                    label=lc.names[i])
+                if obs is not None :
+                    ax.errorbar(obs.jlist[i], obs.mlist[i]+obs.blist[i], 
+                            yerr=obs.elist[i], 
+                            ecolor='k', marker=marker, ms=ms, mfc=mfc, mec='k', ls=ls, lw=lw,
+                            label=" ".join([lc.names[i], "observed"]))
+            else :
+                if np.sum(lc.elist[i]) == 0.0 :
+                    # no error, pure signal.
+                    ax.plot(lc.jlist[i], lc.mlist[i]+lc.blist[i], 
+                        marker=marker, ms=ms, mfc=mfc, mec='k', ls=ls, lw=lw,
+                        label=lc.names[i], color=mfc)
+                else :
+                    ax.errorbar(lc.jlist[i], lc.mlist[i]+lc.blist[i], 
+                        yerr=lc.elist[i], 
+                        ecolor='k', marker=marker, ms=ms, mfc=mfc, mec='k', ls=ls, lw=lw,
+                        label=lc.names[i])
+
+            ax.set_xlim(lc.jstart, lc.jend)
+            ax.set_ylim(np.min(lc.mlist[i])+lc.blist[i]-np.min(lc.elist[i]),
+                        np.max(lc.mlist[i])+lc.blist[i]+np.max(lc.elist[i]))
+            if i == 0 :
+                ax.set_xlabel(r"$t$")
+            else :
+                ax.set_xticklabels([])
+            ax.set_ylabel(r"$f$")
+            leg = ax.legend(loc='best', fancybox=True)
+            leg.get_frame().set_alpha(0.5)
+        return(figure_handler(fig=fig, figout=figout, figext=figext))      

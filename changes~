@@ -1,0 +1,86 @@
+
+lcmodel:
+    show_hist - features added:
+
+        lag_lims - define limits of lag plot
+        lagbinsize - can now be not integer
+        lagplotonly - allows only the lag distribution to be plotted
+        fontsize - allows control of the plot font size
+        xlabel,ylabel - allows control of lag plot labels
+        prob_density - set to True to save probability density instead of no. 
+                        models (for all plotted variables)
+
+    save_hist_data - new function added:
+
+        allows the data from a histrogram to be saved as a txt file. Requires no
+        params, but some optional ones available. Includes lag_lims, lagbinsize,
+         & bins, as with show_hist.
+
+        filename - choose filename, instead of default 'javelin_hist.dat'
+        plot - set to True to see the plot whose data was just saved
+        prob_density - set to True to save probability density instead of no. models
+
+    save_model_data:
+
+        allows all the output data from a model to be saved as a txt file,
+        which can be binned and plotted at leisure. filename optional
+
+        filename - set the filename to something other than the default
+                    ('javelin_mod.dat')
+
+    do_mcmc - improved:
+
+        using 'fchain' to save the chain data now also adds a header containing
+        the file route and file names of each of the lightcurves involved in the
+        chain.
+
+    load_chain - improved:
+
+        if the user loads a chain into a model using lightcurves which have
+        names different to those used to create the chain, or are saved in a
+        different location to those originally used, a warning is given.
+
+hist_tools - new module:
+
+    plot_saved_mod:
+
+        plots the data from a saved model file (saved with save_model_data),
+        without requiring you to load chains and lightcurves. Uses the
+        show_hist function, so has all the same parameters.
+
+        filename - string, required
+             Filename of the saved model data to plot
+
+    show_hist_new:
+
+        works in exactly the same way as Rmap_Model.show_hist, but is not 
+        associated with a particular object and will work if provided with a 
+        model as an argument, or if given the data directly in the form of an 
+        array.
+
+    plot_new:
+
+        works in exactly the same way as Rmap_Model.plot, but is not associated
+        with a particular object and will work if provided with a model
+        as an argument.
+
+zylc:
+    plot - errors sorted:
+
+        It is now possible to plot a single lightcurve without an error
+
+    get_data - improved:
+
+        If the file that the user is attempting to open is not in the current
+        working directory/doesn't exist, the user will be warned and the
+        operation cancelled, instead of just returning an error about strings.
+
+        Adds the file route and filenames of each LC, for book keeping
+        purposes
+
+    Lightcurve (object) - features added:
+
+        Lightcurve.fnames - contains the file route (0th element) and
+        filenames of each of the files loaded into the object, as
+        described above in get_data. Optional if creating an object
+        directly, with the input parameter name 'fnames'.

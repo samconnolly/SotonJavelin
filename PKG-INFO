@@ -1,0 +1,23 @@
+Metadata-Version: 1.1 - modified 1.0
+Name: sotonjavelin
+Version: 0.3alpha - modified 1.0
+Summary: JAVELIN: Just Another Vehicle for Estimting Lags In Nuclei
+Home-page: https://bitbucket.org/nye17/javelin
+Author: Ying Zu
+Author-email: zuying@gmail.com 
+Editing Author: Sam Connolly
+Editing Authot email: sdc1g08@soton.ac.uk
+License: Academic Free License
+Description: 
+                    Ongoing effort to combine an integral GP module to the AGN variablility study.
+                    
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Console
+Classifier: Operating System :: OS Independent
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: Academic Free License (AFL)
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Fortran
+Classifier: Topic :: Scientific/Engineering
+Requires: NumPy (>=1.3)
