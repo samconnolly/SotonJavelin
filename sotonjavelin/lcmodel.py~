@@ -2,6 +2,7 @@
 
 # generic packages
 import numpy as np
+import math
 #np.seterr(all='raise')
 from numpy.random import normal, multivariate_normal
 from scipy.optimize import fmin
@@ -67,7 +68,7 @@ def _lnlike_from_U(U, zydata, set_retq=False, set_verbose=False):
             return(_exit_with_retval(zydata.nlc, set_retq, 
                 errmsg="Warning: non positive-definite covariance W", 
                 set_verbose=set_verbose))
-        detCp_log = chodet_from_tri(W, retlog=True)
+        detCp_log = chodet_from_tri(W, retlog=True) #!!!
         # solve for C_p d = L^T so that d = C_p^-1 L^T = C_q L^T
         d = chosolve_from_tri(W, zydata.larrTr)
     # multiply b d and a so that e = C^-1 L C_p^-1 L^T C^-1 y 
@@ -76,7 +77,7 @@ def _lnlike_from_U(U, zydata, set_retq=False, set_verbose=False):
     #              thus f = C_v^-1 y
     f = a - e
     # multiply y^T  and f so that h = y^T C_v^-1 y
-    h = np.dot(zydata.marr, f)
+    h = np.dot(zydata.marr, f) #!!!
     # chi2_PRH = -0.5*h
     _chi2 = -0.5*h
     # following Carl Rasmussen's term, a penalty on the complexity of 
@@ -86,6 +87,7 @@ def _lnlike_from_U(U, zydata, set_retq=False, set_verbose=False):
     _wmean_pen = -0.5*detCp_log
     # final log_likelhood
     _log_like = _chi2 + _compl_pen + _wmean_pen
+
     if set_retq:
         q = np.dot(d, a)
         return(_log_like, _chi2, _compl_pen, _wmean_pen, q)
@@ -584,7 +586,7 @@ class Cont_Model(object) :
             filename for MCMC chain output (default: None).
         flogp : str, optional
             filename for logp output (default: None).
-        thread : integer
+        threads : integer
             Number of threads (default: 1).
         set_verbose: bool, optional
             Turn on/off verbose mode (default: True).
@@ -896,6 +898,7 @@ def lnpostfn_spear_p(p, zydata, conthpd=None, lagtobaseline=0.3, laglimit=None, 
         logl = lnlikefn_spear(zydata, sigma, tau, llags, lwids, lscales, 
                 set_retq=False, set_verbose=set_verbose,
                 set_threading=set_threading, blocksize=blocksize)
+
     # conthpd is in natural log
     if conthpd is not None : 
         # for sigma
@@ -930,9 +933,15 @@ def lnpostfn_spear_p(p, zydata, conthpd=None, lagtobaseline=0.3, laglimit=None, 
     if set_retq :
         vals[0] = vals[0] + prior
         vals.extend([prior0, prior1, prior2])
+        #if math.isnan(vals):
+        #    print("nan values! (setretq)")
+        #    print(vals)
         return(vals)
     else :
         logp = logl + prior
+        #if math.isnan(logp):
+        #    print("nan values!")
+        #    print(logp)
         return(logp)
 
 def lnlikefn_spear(zydata, sigma, tau, llags, lwids, lscales, set_retq=False, set_verbose=False, set_threading=False, blocksize=10000):
@@ -962,13 +971,17 @@ def lnlikefn_spear(zydata, sigma, tau, llags, lwids, lscales, set_retq=False, se
         C = spear(zydata.jarr,zydata.jarr,
               zydata.iarr,zydata.iarr,sigma,tau,lags,wids,scales)
     # decompose C inplace
+    if np.any(np.isnan(C)):
+        print("spear went wrong",np.any(np.isnan(C)),np.any(np.isnan(zydata.jarr)),np.any(np.isnan(zydata.iarr)),sigma,tau,lags,wids,scales)
     U, info = cholesky(C, nugget=zydata.varr, inplace=True, raiseinfo=False)
+    
     # handle exceptions here
     if info > 0 :
        return(_exit_with_retval(zydata.nlc, set_retq, 
               errmsg="Warning: non positive-definite covariance C", 
               set_verbose=set_verbose))
     retval = _lnlike_from_U(U, zydata, set_retq=set_retq, set_verbose=set_verbose)
+
     return(retval)
 
 class Rmap_Model(object) :
@@ -1083,7 +1096,39 @@ class Rmap_Model(object) :
             print("with logp  %10.5g "%-v_bst)
         return(p_bst, -v_bst)
 
-    def do_mcmc(self, conthpd=None, lagtobaseline=0.3, laglimit="baseline", nwalkers=100, nburn=100, nchain=100, threads=1, fburn=None, fchain=None, flogp=None, set_threading=False, blocksize=10000, set_verbose=True):
+    def do_mcmc(self, conthpd=None, lagtobaseline=0.3,            
+                 laglimit="baseline", nwalkers=100, nburn=100, nchain=100,
+                  threads=1, fburn=None, fchain=None, flogp=None, 
+                   set_threading=False, blocksize=10000, set_verbose=True,
+                    max_attempts=5):
+
+        success = False
+        attempts = 1
+
+        while success == False and attempts < max_attempts + 1:
+            try:
+                self.run_mcmc(conthpdR=conthpd, lagtobaselineR=lagtobaseline,
+                         laglimitR=laglimit, nwalkersR=nwalkers, nburnR=nburn,
+                          nchainR=nchain, threadsR=threads, fburnR=fburn, 
+                           fchainR=fchain, flogpR=flogp, 
+                            set_threadingR=set_threading, blocksizeR=blocksize,
+                             set_verboseR=set_verbose)                
+                success = True
+
+            except ValueError:
+                attempts += 1
+                success = False
+                if attempts <= max_attempts:
+                    print("=========== WARNING! MCMC FAILED! ===========")
+                    print("   Restarting, attempt #{0}".format(attempts))
+                    print("=============================================")
+
+        if success == True:
+            print("MCMC successful")
+        else:
+            raise ValueError("Max attempts exceed, MCMC failed")
+
+    def run_mcmc(self, conthpdR=None, lagtobaselineR=0.3, laglimitR="baseline", nwalkersR=100, nburnR=100, nchainR=100, threadsR=1, fburnR=None, fchainR=None, flogpR=None, set_threadingR=False, blocksizeR=10000, set_verboseR=True):
         """ Run MCMC sampling over the parameter space.
 
         Parameters
@@ -1111,7 +1156,7 @@ class Rmap_Model(object) :
             Number of burn-in steps for `emcee` (default: 50).
         nchain : integer, optional
             Number of chains for `emcee` (default: 50).
-        thread : integer
+        threads : integer
             Number of threads (default: 1).
         fburn : str, optional
             filename for burn-in output (default: None).
@@ -1127,6 +1172,22 @@ class Rmap_Model(object) :
         set_verbose: bool, optional
             Turn on/off verbose mode (default: True).
         """
+        # fill in running params
+        conthpd=conthpdR
+        lagtobaseline=lagtobaselineR
+        laglimit=laglimitR
+        nwalkers=nwalkersR
+        nburn=nburnR
+        nchain=nchainR
+        threads=threadsR
+        fburn=fburnR
+        fchain=fchainR
+        flogp=flogpR
+        set_threading=set_threadingR
+        blocksize=blocksizeR
+        set_verbose=set_verboseR
+
+        # go!
         if (threads > 1 and (not set_threading)):
             if set_verbose:
                 print("run parallel chains of number %2d "%threads)
@@ -1173,7 +1234,12 @@ class Rmap_Model(object) :
                     args=(self.zydata, conthpd, lagtobaseline, laglimit,
                           set_threading, blocksize, False, False), 
                     threads=threads)
-        pos, prob, state = sampler.run_mcmc(p0, nburn)
+        try:
+            pos, prob, state = sampler.run_mcmc(p0, nburn)
+        # catch dodgy initial values and restart
+        except ValueError:
+            raise ValueError("lnprob returned NaN.")
+
         if set_verbose :
             print("burn-in finished")
         if fburn is not None :
@@ -1517,7 +1583,7 @@ class Rmap_Model(object) :
 
         return
 
-    def save_model_data(self,filename='javelin_mod.dat'):
+    def save_mod_data(self,filename='javelin_mod.dat'):
 
         '''
         Save model data relaing to each parameter as a txt file

@@ -2,7 +2,7 @@ import isotropic_cov_funs
 import numpy as np
 from isotropic_cov_funs import symmetrize, imul
 from copy import copy
-from javelin.threadpool import get_threadpool_size, map_noreturn
+from sotonjavelin.threadpool import get_threadpool_size, map_noreturn
 
 __all__ = ['brownian']
 

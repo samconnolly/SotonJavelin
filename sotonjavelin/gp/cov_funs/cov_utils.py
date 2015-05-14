@@ -8,9 +8,9 @@ import pickle
 from isotropic_cov_funs import symmetrize, imul
 from copy import copy
 import sys,os
-import javelin
-from javelin.threadpool import get_threadpool_size, map_noreturn
-mod_search_path = [javelin.__path__[0]+'/gp/cov_funs', os.getcwd()] + sys.path
+import sotonjavelin
+from sotonjavelin.threadpool import get_threadpool_size, map_noreturn
+mod_search_path = [sotonjavelin.__path__[0]+'/gp/cov_funs', os.getcwd()] + sys.path
 
 
 __all__ = ['covariance_wrapper', 'covariance_function_bundle']

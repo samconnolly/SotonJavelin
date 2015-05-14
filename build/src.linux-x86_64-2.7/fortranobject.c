@@ -51,10 +51,10 @@ PyFortranObject_New(FortranDataDef* defs, f2py_void_func init) {
             PyDict_SetItemString(fp->dict,fp->defs[i].name,v);
         } else
             if ((fp->defs[i].data)!=NULL) { /* Is Fortran variable or array (not allocatable) */
-                if (fp->defs[i].type == PyArray_STRING) {
+                if (fp->defs[i].type == NPY_STRING) {
                     int n = fp->defs[i].rank-1;
                     v = PyArray_New(&PyArray_Type, n, fp->defs[i].dims.d,
-                                    PyArray_STRING, NULL, fp->defs[i].data, fp->defs[i].dims.d[n],
+                                    NPY_STRING, NULL, fp->defs[i].data, fp->defs[i].dims.d[n],
                                     NPY_FARRAY, NULL);
                 }
                 else {
@@ -126,9 +126,9 @@ fortran_doc (FortranDataDef def) {
         size += strlen(def.doc);
     p = (char*)malloc (size);
     p[0] = '\0'; /* make sure that the buffer has zero length */
-    if (sprintf(p,"%s - ",def.name)==0) goto fail;
     if (def.rank==-1) {
         if (def.doc==NULL) {
+            if (sprintf(p,"%s - ",def.name)==0) goto fail;
             if (sprintf(p+strlen(p),"no docs available")==0)
                 goto fail;
         } else {

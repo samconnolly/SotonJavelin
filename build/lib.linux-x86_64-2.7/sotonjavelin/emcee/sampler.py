@@ -158,7 +158,10 @@ class Sampler(object):
             Other parameters that are directly passed to :func:`sample`.
 
         """
-        for results in self.sample(pos0, lnprob0, rstate0, iterations=N,
+        try:
+            for results in self.sample(pos0, lnprob0, rstate0, iterations=N,
                                    **kwargs):
-            pass
+                pass 
+        except ValueError:
+            raise ValueError("lnprob returned NaN.")
         return results

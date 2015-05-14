@@ -6,10 +6,11 @@ __all__ = ['FullRankCovariance']
 
 from numpy import *
 from numpy.linalg import cholesky, LinAlgError
+import math
 from GPutils import regularize_array, trisolve
-from javelin.gp.linalg_utils import dpotrf_wrap
+from sotonjavelin.gp.linalg_utils import dpotrf_wrap
 from Covariance import Covariance
-from javelin.gp.incomplete_chol import ichol, ichol_continue
+from sotonjavelin.gp.incomplete_chol import ichol, ichol_continue
 
 
 class FullRankCovariance(Covariance):
@@ -84,6 +85,7 @@ class FullRankCovariance(Covariance):
         N_new = x.shape[0]
 
         U=self.__call__(x, x, regularize = False, observed = observed)
+
         if return_eval_also:
             C_eval = U.copy('F')
 

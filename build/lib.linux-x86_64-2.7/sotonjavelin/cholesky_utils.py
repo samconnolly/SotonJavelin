@@ -3,7 +3,7 @@
 __all__ = ['cholesky', 'trisolve', 'chosolve', 'chodet', 'chosolve_from_tri', 'chodet_from_tri']
 
 import unittest
-from javelin.gp.linalg_utils import dpotrf_wrap, dpotrf2_wrap, dtrsm_wrap
+from sotonjavelin.gp.linalg_utils import dpotrf_wrap, dpotrf2_wrap, dtrsm_wrap
 import numpy as np
 from numpy.testing import assert_equal,  assert_almost_equal, assert_array_equal
 
@@ -30,6 +30,8 @@ def cholesky(A, nugget=None, inplace=False, raiseinfo=True):
         for i in xrange(n):
             U[i,i] += nugget[i]
     info = dpotrf_wrap(U)
+    if np.any(np.isnan(U)):
+        print("Cholesky went wrong")
     if raiseinfo:
         if info>0:
             raise RuntimeError("Matrix does not appear to be positive definite by row %i." % info)

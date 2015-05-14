@@ -10,11 +10,11 @@ __all__ = ['observe', 'plot_envelope', 'predictive_check', 'regularize_array', '
 from numpy import *
 from numpy.linalg import solve, cholesky, eigh
 from numpy.linalg.linalg import LinAlgError
-from javelin.gp.linalg_utils import *
+from sotonjavelin.gp.linalg_utils import *
 from threading import Thread, Lock
 import sys
-from javelin.threadpool import thread_partition_array, map_noreturn
-from javelin.gp import chunksize
+from sotonjavelin.threadpool import thread_partition_array, map_noreturn
+from sotonjavelin.gp import chunksize
 
 class ZeroProbability(ValueError):
     pass

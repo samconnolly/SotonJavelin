@@ -3,10 +3,10 @@
 #from javelin.spear_covfunc import spear_covfunc as SCF
 from spear_covfunc import spear_covfunc as SCF
 import numpy as np
-
-from javelin.threadpool import get_threadpool_size, map_noreturn
-from javelin.gp import isotropic_cov_funs 
-from javelin.gp.GPutils import regularize_array
+#import math
+from sotonjavelin.threadpool import get_threadpool_size, map_noreturn
+from sotonjavelin.gp import isotropic_cov_funs 
+from sotonjavelin.gp.GPutils import regularize_array
 
 import unittest
 
@@ -82,12 +82,14 @@ def spear(x,y,idx,idy,sigma,tau,lags,wids,scales,symm=None,set_pmap=False) :
         idy = np.ones(nx, dtype="int", order="F")*idy
     # Allocate the matrix
     C = np.asmatrix(np.empty((nx,ny),dtype=float,order='F'))
+
     if set_pmap :
         SCF.covmatpmap_bit(C,x,y,idx,idy,sigma,tau,lags,wids,scales,0,-1,symm)
     else :
         SCF.covmat_bit(C,x,y,idx,idy,sigma,tau,lags,wids,scales,0,-1,symm)
     if symm:
         isotropic_cov_funs.symmetrize(C)
+    
     return(C)
 
 

@@ -87,6 +87,7 @@ class EnsembleSampler(Sampler):
 
         # Do a little bit of _magic_ to make the likelihood call with
         # ``args`` pickleable.
+
         self.lnprobfn = _function_wrapper(self.lnprobfn, self.args)
 
         assert self.k % 2 == 0, "The number of walkers must be even."
@@ -241,8 +242,13 @@ class EnsembleSampler(Sampler):
                 # Slices for the first and second halves
                 first, second = slice(halfk), slice(halfk, self.k)
                 for S0, S1 in [(first, second), (second, first)]:
-                    q, newlnp, acc, blob = self._propose_stretch(p[S0], p[S1],
+
+                    try:
+                        q, newlnp, acc, blob = self._propose_stretch(p[S0], p[S1],
                                                                  lnprob[S0])
+                    except ValueError:
+                        raise ValueError("lnprob returned NaN.")
+
                     if np.any(acc):
                         # Update the positions, log probabilities and
                         # acceptance counts.
@@ -315,7 +321,11 @@ class EnsembleSampler(Sampler):
 
         # Calculate the proposed positions and the log-probability there.
         q = c[rint] - zz[:, np.newaxis] * (c[rint] - s)
-        newlnprob, blob = self._get_lnprob(q)
+
+        try:
+            newlnprob, blob = self._get_lnprob(q)
+        except ValueError:
+            raise ValueError("lnprob returned NaN.")        
 
         # Decide whether or not the proposals should be accepted.
         lnpdiff = (self.dim - 1.) * np.log(zz) + newlnprob - lnprob0
@@ -362,7 +372,7 @@ class EnsembleSampler(Sampler):
 
         # Run the log-probability calculations (optionally in parallel).
         results = list(M(self.lnprobfn, [p[i] for i in range(len(p))]))
-
+        
         try:
             lnprob = np.array([float(l[0]) for l in results])
             blob = [l[1] for l in results]
@@ -372,7 +382,12 @@ class EnsembleSampler(Sampler):
 
         # Check for lnprob returning NaN.
         if np.any(np.isnan(lnprob)):
+           
             # Print some debugging stuff.
+
+            #print("Values, at least one of which is NaN:")
+            #for val in lnprob:
+            #    print(val)
             print("NaN value of lnprob for parameters: ")
             for pars in p[np.isnan(lnprob)]:
                 print(pars)

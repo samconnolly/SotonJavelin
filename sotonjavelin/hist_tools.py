@@ -11,10 +11,10 @@ Tools to save and plot histogram data from Javelin (Wu 2012(?))
 """
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-from javelin.graphic import figure_handler
-from javelin.lcio import readlc_3c
-from javelin.zylc import LightCurve
-from javelin.lcmodel import Rmap_Model
+from sotonjavelin.graphic import figure_handler
+from sotonjavelin.lcio import readlc_3c
+from sotonjavelin.zylc import LightCurve
+from sotonjavelin.lcmodel import Rmap_Model
 import numpy as np
 import pylab as plt
 import os

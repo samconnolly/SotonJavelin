@@ -15,8 +15,8 @@ __all__ = ['BasisCovariance', 'SeparableBasisCovariance']
 from numpy import *
 from numpy.linalg import eigh, solve, cholesky, LinAlgError
 from GPutils import regularize_array, trisolve
-from javelin.gp.linalg_utils import basis_diag_call
-from javelin.gp.incomplete_chol import ichol_basis, ichol_full
+from sotonjavelin.gp.linalg_utils import basis_diag_call
+from sotonjavelin.gp.incomplete_chol import ichol_basis, ichol_full
 from Covariance import Covariance
 
 

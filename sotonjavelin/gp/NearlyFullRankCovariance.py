@@ -7,8 +7,8 @@ __all__ = ['NearlyFullRankCovariance']
 from numpy import *
 from numpy.linalg import cholesky, LinAlgError
 from GPutils import regularize_array, trisolve
-from javelin.gp.linalg_utils import diag_call
-from javelin.gp.incomplete_chol import ichol_full
+from sotonjavelin.gp.linalg_utils import diag_call
+from sotonjavelin.gp.incomplete_chol import ichol_full
 from Covariance import Covariance
 
 

@@ -1,7 +1,7 @@
 import numpy as np
 import imp
-import javelin
-mod_search_path = [javelin.__path__[0]+'/gp/cov_funs']
+import sotonjavelin
+mod_search_path = [sotonjavelin.__path__[0]+'/gp/cov_funs']
 imp.load_module('distances', *imp.find_module('distances',mod_search_path))
 
 from distances import euclidean, aniso_geo_rad, paniso_geo_rad

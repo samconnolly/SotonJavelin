@@ -568,7 +568,7 @@ def get_data(lcfile, names=None, set_subtractmean=True, timeoffset=0.0):
                 fnames.append(lcfile[i])
             else:
                 print "ERROR: {0} is not a file in the current directory. Aborting."\
-                            .format(lcf)
+                            .format(lcfile)
     if len(lclist) > 0:
         for ilc in xrange(len(lclist)) :
             lclist[ilc][0] = np.atleast_1d(lclist[ilc][0]) + timeoffset
